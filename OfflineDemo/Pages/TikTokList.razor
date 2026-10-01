@@ -1,0 +1,62 @@
+﻿@page "/shorts"
+
+@inject HttpClient httpClient
+@inject IConfiguration config
+
+<h3>Shorts List</h3>
+
+@if (shorts == null)
+{
+    <p>Loading...</p>
+}
+else if (!shorts.Any())
+{
+    <p>No shorts available.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Hashtags</th>
+                <th>Mp4 URL</th>
+                <th>Image URL</th>
+                <th>Uploaded</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var shortItem in shorts)
+            {
+                <tr>
+                    <td>@shortItem.Id</td>
+                    <td>@shortItem.Title</td>
+                    <td>@shortItem.Description</td>
+                    <td>@shortItem.Hashtags</td>
+                    <td><a href="@shortItem.Mp4FileUrl" target="_blank">View Video</a></td>
+                    <td><a href="@shortItem.ImageFileUrl" target="_blank">View Image</a></td>
+                    <td>@(shortItem.IsUploaded ? "Yes" : "No")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ShortsModel>? shorts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            string url = $"{config["ApiUrl"]}/shorts";
+            shorts = await httpClient.GetFromJsonAsync<List<ShortsModel>>(url);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error fetching shorts: {ex.Message}");
+        }
+    }
+}

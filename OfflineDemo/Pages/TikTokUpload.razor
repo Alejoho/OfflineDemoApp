@@ -1,0 +1,138 @@
+﻿@page "/upload"
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient http
+@inject IConfiguration config
+@inject NavigationManager nav
+
+<h3>Upload TikTok Video</h3>
+
+@if (isSubmitting)
+{
+    <p>Uploading...</p>
+}
+
+@if (!string.IsNullOrEmpty(resultMessage))
+{
+    <p>@resultMessage</p>
+}
+
+<EditForm Model="@uploadModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group mb-3">
+        <label class="form-label" for="title">Title</label>
+        <InputText id="title" class="form-control" @bind-Value="uploadModel.Title" />
+        <ValidationMessage For="@(() => uploadModel.Title)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label class="form-label" for="description">Description</label>
+        <InputTextArea id="description" class="form-control" @bind-Value="uploadModel.Description" />
+        <ValidationMessage For="@(() => uploadModel.Description)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label class="form-label" for="hashtags">Hashtags</label>
+        <InputText id="hashtags" @oninput="HandleHashtagInput" class="form-control" @bind-Value="uploadModel.Hashtags" />
+        <ValidationMessage For="@(() => uploadModel.Hashtags)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label class="form-label" for="mp4Upload">MP4 File</label>
+        <InputFile id="mp4Upload" class="form-control" OnChange="@HandleMp4FileChange" accept=".mp4,.mov" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label class="form-label" for="imageUpload">Image File (optional)</label>
+        <InputFile id="imageUpload" class="form-control" OnChange="@HandleImageFileChange" accept=".jpg,.jpeg,.png" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</EditForm>
+
+@code {
+    private UploadModel uploadModel = new();
+    private IBrowserFile? mp4File;
+    private IBrowserFile? imageFile;
+    private bool isSubmitting = false;
+    private string? resultMessage;
+
+    private void HandleMp4FileChange(InputFileChangeEventArgs e)
+    {
+        mp4File = e.File;
+    }
+
+    private void HandleImageFileChange(InputFileChangeEventArgs e)
+    {
+        imageFile = e.File;
+    }
+
+    private async Task HandleHashtagInput(ChangeEventArgs e)
+    {
+        var input = e.Value?.ToString() ?? "";
+        if (input.EndsWith(" "))
+        {
+            // Add a hashtag before the space
+            uploadModel.Hashtags = input.TrimEnd() + " #";
+            // Optionally, reset cursor position
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        resultMessage = "";
+
+        if (mp4File == null || imageFile == null)
+        {
+            resultMessage = "Both MP4 and Image files are required.";
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            using var content = new MultipartFormDataContent();
+            content.Add(new StringContent(uploadModel.Title ?? string.Empty), "Title");
+            content.Add(new StringContent(uploadModel.Description ?? string.Empty), "Description");
+            content.Add(new StringContent(uploadModel.Hashtags ?? string.Empty), "Hashtags");
+
+            // Add files
+            var mp4Stream = mp4File.OpenReadStream(800 * 1024 * 1024); // 800 MB limit
+            var mp4Content = new StreamContent(mp4Stream);
+            mp4Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mp4File.ContentType);
+            content.Add(mp4Content, "Mp4File", mp4File.Name);
+
+            var imageStream = imageFile.OpenReadStream(10 * 1024 * 1024); // 10 MB limit for images
+            var imageContent = new StreamContent(imageStream);
+            imageContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(imageFile.ContentType);
+            content.Add(imageContent, "ImageFile", imageFile.Name);
+
+            // Call the API
+            string url = $"{config["ApiUrl"]}/upload";
+            var response = await http.PostAsync(url, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                resultMessage = "Files uploaded successfully!";
+                nav.NavigateTo("/shorts");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                resultMessage = $"Error: {response.StatusCode} - {error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            resultMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

@@ -1,0 +1,49 @@
+﻿@page "/todo"
+@inject ILocalStorageService localStorage
+
+<h3>ToDo</h3>
+
+@if (todos is not null)
+{
+    <ol>
+        @foreach (var todo in todos)
+        {
+            <li>@todo.ToDoItem (@todo.CreationDate.ToString("MMMM dd, yyyy hh:mm tt"))</li>
+        }
+    </ol>
+}
+
+<h4>Add ToDo Item</h4>
+<EditForm Model="newTodo" OnValidSubmit="AddTodo">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label for="newTodo.ToDoItem">ToDo Item</label>
+        <InputText id="newTodo.ToDoItem" class="form-control" @bind-Value="newTodo.ToDoItem" />
+        <ValidationMessage For="@(() => newTodo.ToDoItem)" />
+    </div>
+    <button type="submit" class="btn btn-primary">Add</button>
+</EditForm>
+
+@code {
+    private List<TodoModel> todos;
+    private TodoModel newTodo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        todos = await localStorage.GetItemAsync<List<TodoModel>>("todos");
+
+        if (todos is null || todos.Count == 0)
+        {
+            todos = new();
+            await localStorage.SetItemAsync("todos", todos);
+        }
+    }
+
+    private async Task AddTodo()
+    {
+        todos.Add(newTodo);
+        newTodo = new();
+        await localStorage.SetItemAsync("todos", todos);
+    }
+}
