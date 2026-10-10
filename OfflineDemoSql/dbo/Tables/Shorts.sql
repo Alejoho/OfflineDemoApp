@@ -6,5 +6,5 @@
     Hashtags NVARCHAR(75),
     Mp4FileUrl NVARCHAR(1024),
     ImageFileUrl NVARCHAR(1024), 
-    [IsUploaded] BIT NOT NULL DEFAULT 0
+    IsUploaded BIT NOT NULL DEFAULT 0
 )

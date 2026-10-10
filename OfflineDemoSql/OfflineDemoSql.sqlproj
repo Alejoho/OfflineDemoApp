@@ -56,11 +56,20 @@
   <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
   <ItemGroup>
     <Folder Include="Properties" />
+    <Folder Include="dbo" />
+    <Folder Include="dbo\StoreProcedures" />
+    <Folder Include="dbo\Tables" />
+    <Folder Include="PublishProfiles" />
   </ItemGroup>
   <ItemGroup>
-    <Build Include="Shorts.sql" />
-    <Build Include="spShorts_CreateNew.sql" />
-    <Build Include="spShorts_AddUploadedFiles.sql" />
-    <Build Include="spShorts_GetAll.sql" />
+    <Build Include="dbo\Tables\Shorts.sql" />
+    <Build Include="dbo\StoreProcedures\spShorts_AddUploadedFiles.sql" />
+    <Build Include="dbo\StoreProcedures\spShorts_CreateNew.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <Build Include="dbo\StoreProcedures\spShorts_GetAll.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PublishProfiles\OfflineDemoSql.publish.xml" />
   </ItemGroup>
 </Project>
