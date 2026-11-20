@@ -17,13 +17,18 @@ public static class DependencyInjectionExtensions
         await builder.AddAzureBlobStorageAsync();
 
         builder.Services.AddOptions<AzureStorageConfig>()
-            .Bind(builder.Configuration.GetSection(AzureStorageConfig.SectionName));
+            .Bind(builder.Configuration.GetSection(AzureStorageConfig.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
     }
 
     private static async Task AddAzureBlobStorageAsync(this WebApplicationBuilder builder)
     {
         // Bind Azure Storage configuration
-        var azureStorageConfig = builder.Configuration.GetSection("AzureStorage").Get<AzureStorageConfig>();
+        var azureStorageConfig = builder.Configuration
+            .GetSection("AzureStorage")
+            .Get<AzureStorageConfig>()
+            ?? throw new Exception("'AzureStorage' section not found. Check that it exists in the configuration file.");
 
         // Ensure the blob container exists
         var blobServiceClient = new BlobServiceClient(azureStorageConfig.ConnectionString);
