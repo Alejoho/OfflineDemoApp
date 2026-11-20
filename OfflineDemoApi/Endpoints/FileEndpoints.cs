@@ -1,4 +1,6 @@
 ﻿using Azure.Storage.Blobs;
+using Microsoft.Extensions.Options;
+using OfflineDemoApi.Models;
 
 namespace OfflineDemoApi.Endpoints;
 
@@ -9,11 +11,13 @@ public static class FileEndpoints
         app.MapGet("/api/file", GetSecureFiles);
     }
 
-    private static async Task<IResult> GetSecureFiles(IConfiguration config, string url)
+    private static async Task<IResult> GetSecureFiles(IOptions<AzureStorageConfig> azureConfig, string url)
     {
+        var azureConfigValue = azureConfig.Value;
+
         var blobUri = new Uri(url);
-        var storageAccountKey = config.GetValue<string>("AzureStorage:StorageAccountKey");
-        var storageAccountName = config.GetValue<string>("AzureStorage:StorageAccountName");
+        var storageAccountKey = azureConfigValue.StorageAccountKey;
+        var storageAccountName = azureConfigValue.StorageAccountName;
 
         var credential = new Azure.Storage.StorageSharedKeyCredential(storageAccountName, storageAccountKey);
         var blobClient = new BlobClient(blobUri, credential);

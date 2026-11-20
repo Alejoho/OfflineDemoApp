@@ -41,7 +41,7 @@ public static class ShortEndpoints
         }
 
         // Validate file size
-        const long maxFileSize = 800L * 1024 * 1024; // 800MB
+        const long maxFileSize = Global.MaxFileSixe;
         if (mp4File.Length > maxFileSize)
         {
             return Results.BadRequest("MP4 file exceeds the 800MB limit.");

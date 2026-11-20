@@ -6,6 +6,20 @@ namespace OfflineDemoApi.Extensions;
 
 public static class DependencyInjectionExtensions
 {
+    public static async Task AddDependenciesAsync(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddOpenApiServices();
+
+        builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
+
+        builder.Services.AddCorsServices();
+
+        await builder.AddAzureBlobStorageAsync();
+
+        builder.Services.AddOptions<AzureStorageConfig>()
+            .Bind(builder.Configuration.GetSection(AzureStorageConfig.SectionName));
+    }
+
     private static async Task AddAzureBlobStorageAsync(this WebApplicationBuilder builder)
     {
         // Bind Azure Storage configuration
@@ -18,16 +32,5 @@ public static class DependencyInjectionExtensions
         await blobContainerClient.SetAccessPolicyAsync(Azure.Storage.Blobs.Models.PublicAccessType.None);
 
         builder.Services.AddSingleton(blobContainerClient);
-    }
-
-    public static async Task AddDependenciesAsync(this WebApplicationBuilder builder)
-    {
-        builder.Services.AddOpenApiServices();
-
-        builder.Services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
-
-        builder.Services.AddCorsServices();
-
-        await builder.AddAzureBlobStorageAsync();
     }
 }
