@@ -5,6 +5,6 @@
 AS
 begin
 	update dbo.Shorts
-	set Mp4FileUrl = @mp4FileUrl, ImageFileUrl = @imageFileUrl
+	set Mp4FileUrl = @mp4FileUrl, ImageFileUrl = @imageFileUrl, IsUploaded = 1
 	where Id = @id;
 end
